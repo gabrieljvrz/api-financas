@@ -1,0 +1,56 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Usuario {
+  id             Int    @id @default(autoincrement())
+  nome           String
+  email          String @unique
+  senha          String
+  transacoes     Transacao[]
+  criadoEm      DateTime  @default(now())
+  atualizadoEm  DateTime  @updatedAt
+}
+
+enum TipoTransacao {
+  ENTRADA
+  SAIDA
+}
+
+enum StatusTransacao {
+  PAGO
+  PENDENTE
+}
+
+enum Categoria {
+  MORADIA
+  ALIMENTACAO
+  TRANSPORTE
+  LAZER
+  ESPORTES
+  SAUDE
+  EDUCACAO
+  ASSINATURAS
+  OUTROS
+}
+
+model Transacao {
+  id          Int             @id @default(autoincrement())
+  descricao   String
+  valor       Decimal
+  tipo        TipoTransacao
+  categoria   Categoria       @default(OUTROS)
+  status      StatusTransacao @default(PENDENTE)
+  usuarioId   Int
+  usuario     Usuario         @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  data        DateTime        @default(now())
+}
