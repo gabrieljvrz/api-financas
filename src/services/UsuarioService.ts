@@ -1,6 +1,12 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
 import { Prisma } from '@prisma/client';
+
+export interface LoginDTO {
+    email: string;
+    senha: string;
+}
 
 export class UsuarioService {
     constructor(private usuarioRepository: UsuarioRepository) {}
@@ -26,5 +32,23 @@ export class UsuarioService {
 
         const { senha, ...usuarioSemSenha } = usuarioCriado;
         return usuarioSemSenha;
+    }
+
+    async login(dados: LoginDTO) {
+        const usuario = await this.usuarioRepository.buscarPorEmail(dados.email);
+
+        if (usuario === null) {
+            throw new Error("Credenciais inválidas!");
+        }
+
+        const senhaValida = await bcrypt.compare(dados.senha, usuario.senha)
+    
+        if (!senhaValida) {
+            throw new Error("Credenciais inválidas!");
+        }
+
+        const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+
+        return { token };
     }
 }
