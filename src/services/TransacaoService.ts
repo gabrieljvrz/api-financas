@@ -16,10 +16,34 @@ export class TransacaoService {
         return transacaoCriada;
     }
 
-    async listarPorUsuario(usuarioId: number) {
-        const transacoes = await this.transacaoRepository.listarPorUsuario(usuarioId);
+    async listarPorUsuario(usuarioId: number, pagina: number = 1, limite: number = 10, mes?: number, ano?: number) {
+        const skip = (pagina - 1) * limite;
+        const take = limite;
 
-        return transacoes;
+        const filtros: Prisma.TransacaoWhereInput = {};
+
+        if (mes && ano) {
+            const dataInicial = new Date(ano, mes - 1, 1);
+
+            const dataFinal = new Date(ano, mes, 1);
+
+            filtros.data = {
+                gte: dataInicial.toISOString(),
+                lt: dataFinal.toISOString()
+            };
+        }
+        
+        const resultado = await this.transacaoRepository.listarPorUsuario(usuarioId, skip, take, filtros);
+
+        return {
+            dados: resultado.transacoes,
+            meta: {
+                total: resultado.total,
+                paginaAtual: pagina,
+                totalPaginas: Math.ceil(resultado.total / limite),
+                limite
+            }
+        };
     }
 
     async buscarPorId(id: number, usuarioId: number) {

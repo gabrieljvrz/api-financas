@@ -10,12 +10,30 @@ export class TransacaoRepository {
         return transacao;
     }
 
-    async listarPorUsuario(usuarioId: number) {
+    async listarPorUsuario(
+        usuarioId: number,
+        skip: number,
+        take: number,
+        filtros?: Prisma.TransacaoWhereInput
+    ) {
         const transacoes = await prisma.transacao.findMany({
-            where: { usuarioId }
+            where: { 
+                usuarioId, 
+                ...filtros
+            },
+            skip,
+            take,
+            orderBy: { data: 'desc' }
         });
 
-        return transacoes;
+        const total = await prisma.transacao.count({
+            where: {
+                usuarioId,
+                ...filtros
+            }
+        });
+
+        return { transacoes, total };
     }
 
     async buscarPorId(id: number, usuarioId: number) {

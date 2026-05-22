@@ -32,7 +32,12 @@ export class TransacaoController {
         try {
             const usuarioId = req.usuarioId!;
 
-            const resultado = await this.transacaoService.listarPorUsuario(usuarioId);
+            const pagina = req.query.page ? Number(req.query.page) : 1;
+            const limite = req.query.limit ? Number(req.query.limit) : 10;
+            const mes = req.query.mes ? Number(req.query.mes) : undefined;
+            const ano = req.query.ano ? Number(req.query.ano) : undefined;
+
+            const resultado = await this.transacaoService.listarPorUsuario(usuarioId, pagina, limite, mes, ano);
 
             return res.status(200).json(resultado)
         } catch (erro: any) {
