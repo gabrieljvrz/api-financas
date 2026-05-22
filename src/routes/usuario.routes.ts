@@ -11,7 +11,7 @@ const usuarioService = new UsuarioService(usuarioRepository);
 
 const usuarioController = new UsuarioController(usuarioService);
 
-router.post('/usuarios', usuarioController.criar);
+router.post('/', usuarioController.criar);
 
 router.post('/login', usuarioController.login);
 

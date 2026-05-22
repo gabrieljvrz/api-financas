@@ -1,0 +1,277 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "API de Finanças Pessoais",
+    "version": "1.0.0",
+    "description": "API RESTful para controle financeiro pessoal desenvolvida em Node.js com TypeScript, Express e Prisma ORM. Contempla autenticação JWT, CRUD de transações e dashboard com agregados dinâmicos."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Ambiente de Desenvolvimento Local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Insira o token JWT gerado no endpoint de login para acessar as rotas protegidas."
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/usuarios": {
+      "post": {
+        "summary": "Cadastrar um novo usuário",
+        "tags": ["Autenticação & Usuários"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["nome", "email", "senha"],
+                "properties": {
+                  "nome": { "type": "string", "example": "Gabriel Silva" },
+                  "email": { "type": "string", "example": "gabriel@teste.com" },
+                  "senha": { "type": "string", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuário cadastrado com sucesso."
+          },
+          "400": {
+            "description": "Erro de validação nos dados enviados ou e-mail já cadastrado."
+          }
+        }
+      }
+    },
+    "/usuarios/login": {
+      "post": {
+        "summary": "Autenticar usuário (Login)",
+        "tags": ["Autenticação & Usuários"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "senha"],
+                "properties": {
+                  "email": { "type": "string", "example": "gabriel@teste.com" },
+                  "senha": { "type": "string", "example": "123456" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticação bem-sucedida. Retorna o token JWT.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciais inválidas (E-mail ou senha incorretos)."
+          }
+        }
+      }
+    },
+    "/transacoes": {
+      "post": {
+        "summary": "Criar uma nova transação",
+        "tags": ["Transações"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["descricao", "valor", "tipo", "data"],
+                "properties": {
+                  "descricao": { "type": "string", "example": "Salário Mensal" },
+                  "valor": { "type": "number", "example": 5000 },
+                  "tipo": { "type": "string", "enum": ["ENTRADA", "SAIDA"], "example": "ENTRADA" },
+                  "data": { "type": "string", "example": "2026-05-22T10:00:00.000Z" },
+                  "categoria": { "type": "string", "example": "Trabalho" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transação criada com sucesso."
+          },
+          "400": {
+            "description": "Dados de entrada inválidos (rejeitado pelo validador Zod)."
+          },
+          "401": {
+            "description": "Não autorizado. Token JWT ausente ou inválido."
+          }
+        }
+      },
+      "get": {
+        "summary": "Listar transações do usuário logado",
+        "tags": ["Transações"],
+        "parameters": [
+          { "in": "query", "name": "page", "schema": { "type": "integer", "default": 1 }, "description": "Número da página para paginação" },
+          { "in": "query", "name": "limit", "schema": { "type": "integer", "default": 10 }, "description": "Quantidade de registros por página" },
+          { "in": "query", "name": "mes", "schema": { "type": "integer" }, "description": "Filtrar por mês específico (1 a 12)" },
+          { "in": "query", "name": "ano", "schema": { "type": "integer" }, "description": "Filtrar por ano específico (ex: 2026)" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de transações e metadados de paginação retornados com sucesso.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dados": { "type": "array", "items": { "type": "object" } },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "total": { "type": "integer", "example": 4 },
+                        "paginaAtual": { "type": "integer", "example": 1 },
+                        "totalPaginas": { "type": "integer", "example": 2 },
+                        "limite": { "type": "integer", "example": 2 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          }
+        }
+      }
+    },
+    "/transacoes/resumo": {
+      "get": {
+        "summary": "Obter resumo financeiro (Dashboard)",
+        "tags": ["Transações"],
+        "responses": {
+          "200": {
+            "description": "Cálculo consolidado de entradas, saídas e saldo atual feito via banco de dados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalEntradas": { "type": "number", "example": 17000 },
+                    "totalSaidas": { "type": "number", "example": 4500 },
+                    "saldoAtual": { "type": "number", "example": 12500 }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado."
+          }
+        }
+      }
+    },
+    "/transacoes/{id}": {
+      "get": {
+        "summary": "Buscar uma transação específica por ID",
+        "tags": ["Transações"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" }, "description": "ID numérico da transação" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transação encontrada e retornada."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "404": {
+            "description": "Transação não encontrada ou não pertence ao usuário logado."
+          }
+        }
+      },
+      "put": {
+        "summary": "Atualizar uma transação existente",
+        "tags": ["Transações"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" }, "description": "ID numérico da transação" }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["descricao", "valor", "tipo", "data"],
+                "properties": {
+                  "descricao": { "type": "string", "example": "Salário Atualizado" },
+                  "valor": { "type": "number", "example": 5500 },
+                  "tipo": { "type": "string", "enum": ["ENTRADA", "SAIDA"], "example": "ENTRADA" },
+                  "data": { "type": "string", "example": "2026-05-22T10:00:00.000Z" },
+                  "categoria": { "type": "string", "example": "Trabalho" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transação atualizada com sucesso."
+          },
+          "400": {
+            "description": "Erro de validação nos dados enviados."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "404": {
+            "description": "Transação não encontrada."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remover uma transação",
+        "tags": ["Transações"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "integer" }, "description": "ID numérico da transação" }
+        ],
+        "responses": {
+          "204": {
+            "description": "Transação excluída com sucesso. Não retorna corpo."
+          },
+          "401": {
+            "description": "Não autorizado."
+          },
+          "404": {
+            "description": "Transação não encontrada."
+          }
+        }
+      }
+    }
+  }
+}
