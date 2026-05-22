@@ -80,4 +80,16 @@ export class TransacaoController {
             return res.status(400).json({ erro: erro.message });
         }
     }
+
+    obterResumo = async (req: CustomRequest, res: Response) => {
+        try {
+            const usuarioId = req.usuarioId!;
+
+            const resultado = await this.transacaoService.calcularResumo(usuarioId);
+
+            return res.status(200).json(resultado);
+        } catch (erro: any) {
+            return res.status(400).json({ erro: erro.message });
+        }
+    }
 }

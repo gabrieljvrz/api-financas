@@ -40,4 +40,16 @@ export class TransacaoRepository {
             where: { id }
         });
     }
+
+    async calcularResumo(usuarioId: number) {
+        const resumo = await prisma.transacao.groupBy({
+            by: ['tipo'],
+            where: { usuarioId },
+            _sum: {
+                valor: true
+            }
+        });
+
+        return resumo;
+    }
 }

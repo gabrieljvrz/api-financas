@@ -14,6 +14,7 @@ const transacaoController = new TransacaoController(transacaoService);
 
 router.post('/', authMiddleware, validate(transacaoSchema), transacaoController.criar);
 router.get('/', authMiddleware, transacaoController.listar);
+router.get('/resumo', authMiddleware, transacaoController.obterResumo)
 router.get('/:id', authMiddleware, transacaoController.buscarPorId);
 router.put('/:id', authMiddleware, validate(transacaoSchema), transacaoController.atualizar);
 router.delete('/:id', authMiddleware, transacaoController.deletar);

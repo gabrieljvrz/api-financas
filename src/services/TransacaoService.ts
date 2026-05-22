@@ -45,4 +45,29 @@ export class TransacaoService {
 
         await this.transacaoRepository.deletar(id);
     }
+
+    async calcularResumo(usuarioId: number) {
+        const agrupamento = await this.transacaoRepository.calcularResumo(usuarioId);
+
+        let totalEntradas = 0;
+        let totalSaidas = 0;
+
+        for (const grupo of agrupamento) {
+            const soma = grupo._sum.valor ? Number(grupo._sum.valor) : 0;
+
+            if (grupo.tipo === 'ENTRADA') {
+                totalEntradas += soma;
+            } else if (grupo.tipo === 'SAIDA') {
+                totalSaidas += soma;
+            }
+        }
+
+        const saldoAtual = totalEntradas - totalSaidas;
+
+        return {
+            totalEntradas,
+            totalSaidas,
+            saldoAtual
+        };
+    }
 }
