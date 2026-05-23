@@ -1,3 +1,4 @@
+import { env } from '../config/env.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { UsuarioRepository } from '../repositories/UsuarioRepository.js';
@@ -47,7 +48,11 @@ export class UsuarioService {
             throw new Error("Credenciais inválidas!");
         }
 
-        const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET as string, { expiresIn: '1d' });
+        const token = jwt.sign(
+            { id: usuario.id }, 
+            env.JWT_SECRET, 
+            { expiresIn: '1d' }
+        );
 
         return { token };
     }

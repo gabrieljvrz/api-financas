@@ -1,12 +1,11 @@
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
+import { env } from './config/env.js';
 import usuarioRoutes from './routes/usuario.routes.js';
 import transacaoRoutes from './routes/transacao.routes.js';
 import swaggerUi from 'swagger-ui-express';
 import fs from 'fs';
 
-dotenv.config();
 const app = express();
 
 app.use(cors());
@@ -19,9 +18,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/usuarios', usuarioRoutes);
 app.use('/transacoes', transacaoRoutes);
 
-const PORT = process.env.PORT || 3000
-
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-    console.log(`Documentação disponível em: http://localhost:${PORT}/api-docs`);
+app.listen(env.PORT, () => {
+    console.log(`Servidor rodando na porta ${env.PORT}`);
+    console.log(`Documentação disponível em: http://localhost:${env.PORT}/api-docs`);
 });
